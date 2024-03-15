@@ -12,6 +12,35 @@ const eye_point_ommatidial_schema = {
     },
     "ommatidialProperties": {
       "description": "Point-ommatidial eyes require these ommatidial properties to be defined.",
+      "type": "object",
+      // 这四项需是object才可被required
+      "properties": {
+        "POSITION": {
+          "description":"3D Vector",
+          "type":"array",
+          "items": {"type" : "number"},
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "ORIENTATION": {
+          "description":"3D Vector",
+          "type":"array",
+          "items": {"type" : "number"},
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "FOCAL_OFFSET": {
+          "oneOf":[
+            {"description":"3D Vector",
+            "type":"array",
+            "items": {"type" : "number"},
+            "minItems": 3,
+            "maxItems": 3},
+            {"type":"number"}
+          ]
+        },
+        "DIAMETER": {"type":"number"},
+      },
       "required": ["POSITION", "ORIENTATION", "FOCAL_OFFSET", "DIAMETER"]
     },
   },
@@ -104,6 +133,8 @@ eye_spherical_schema = {
       "default": 1
     },
     "ommatidialProperties": {
+      // TODO 这一块还需要定义吗？
+      "type": "object",
       "description": "Spherical eyes require these ommatidial properties to be defined.",
       "required": ["DIAMETER", "FOCAL_OFFSET"]
     }
@@ -129,6 +160,7 @@ eye_surface_schema = {
     },
     "ommatidialProperties": {
       "description": "Surface mesh eyes require these ommatidial properties to be defined.",
+      "type": "object",
       "required": ["DIAMETER", "FOCAL_OFFSET"]
     },
     "surface": {
@@ -146,6 +178,7 @@ eye_surface_schema = {
         },
         "INDICES": {
           "description": "A reference to a glTF accessor that stores the indices of the 3D eye surface triangles, interpreted as triplets of indices to indicate the vertex/normal pair that make up each corner of the triangles, in counter-clockwise winding order.",
+          "type": "integer",
           "allOf": [ { "$ref": "glTFid.schema.json" } ],
           "multipleOf": 3
           //!!原来是multple
@@ -252,7 +285,8 @@ glTF_OCES_eyes_schema = {
       "minItems": 1
     }
   },
-  "required": ["version"]
+  // 增加了 eyes
+  "required": ["version", "eyes"]
 },
 
 mirrorPlane_schema = {
@@ -340,7 +374,7 @@ node_schema=
             "minItems": 16,
             "maxItems": 16,
             "default": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ],
-            "gltf_webgl": "`uniformMatrix4fv()` with the transpose parameter equal to false"
+            // "`uniformMatrix4fv()` with the transpose parameter equal to false"
         },
         "mesh": {
             "allOf": [ { "$ref": "glTFid.schema.json" } ],
@@ -580,12 +614,12 @@ accessor_schema=
             "minimum": 0,
             "default": 0,
             //// "The offset relative to the start of the buffer view in bytes.  This **MUST** be a multiple of the size of the component datatype. This property **MUST NOT** be defined when `bufferView` is undefined.",
-            "gltf_webgl": "`vertexAttribPointer()` offset parameter"
+            // "`vertexAttribPointer()` offset parameter"
         },
         "componentType": {
             "description": "The datatype of the accessor's components.",
             //// "The datatype of the accessor's components.  UNSIGNED_INT type **MUST NOT** be used for any accessor that is not referenced by `mesh.primitive.indices`.",
-            "gltf_webgl": "`type` parameter of `vertexAttribPointer()`.  The corresponding typed arrays are `Int8Array`, `Uint8Array`, `Int16Array`, `Uint16Array`, `Uint32Array`, and `Float32Array`.",
+            // "`type` parameter of `vertexAttribPointer()`.  The corresponding typed arrays are `Int8Array`, `Uint8Array`, `Int16Array`, `Uint16Array`, `Uint32Array`, and `Float32Array`.",
             "anyOf": [
                 {
                     "const": 5120,
@@ -627,7 +661,7 @@ accessor_schema=
             "description": "Specifies whether integer data values are normalized before usage.",
             "default": false,
             // "Specifies whether integer data values are normalized (`true`) to [0, 1] (for unsigned types) or to [-1, 1] (for signed types) when they are accessed. This property **MUST NOT** be set to `true` for accessors with `FLOAT` or `UNSIGNED_INT` component type.",
-            "gltf_webgl": "`normalized` parameter of `vertexAttribPointer()` "
+            // "`normalized` parameter of `vertexAttribPointer()` "
         },
         "count": {
             "type": "integer",
@@ -985,9 +1019,9 @@ buffer_schema=
         "uri": {
             "type": "string",
             "description": "The URI (or IRI) of the buffer.",
-            "format": "iri-reference",
+            //"format": "iri-reference",
             // "The URI (or IRI) of the buffer.  Relative paths are relative to the current glTF asset.  Instead of referencing an external file, this field **MAY** contain a `data:`-URI.",
-            "gltf_uriType": "application"
+            //"gltf_uriType": "application"
         },
         "byteLength": {
             "type": "integer",
@@ -1032,11 +1066,11 @@ bufferView_schema=
             "maximum": 252,
             "multipleOf": 4,
             // "The stride, in bytes, between vertex attributes.  When this is not defined, data is tightly packed. When two or more accessors use the same buffer view, this field **MUST** be defined.",
-            "gltf_webgl": "`vertexAttribPointer()` stride parameter"
+            // "`vertexAttribPointer()` stride parameter"
         },
         "target": {
             "description": "The hint representing the intended GPU buffer type to use with this buffer view.",
-            "gltf_webgl": "`bindBuffer()`",
+            // "`bindBuffer()`",
             "anyOf": [
                 {
                     "const": 34962,
@@ -1345,7 +1379,15 @@ glTF_schema=
             },
             "minItems": 1
         },
-        "extensions": { },
+        "extensions": { 
+            // changed 入点
+            "type": "object",
+            "properties": {
+                "OCES_eyes": {
+                    "$ref": "glTF.OCES_eyes.schema.json"
+                }
+            }
+        },
         "extras": { }
     },
     "dependencies": {
@@ -1407,9 +1449,10 @@ image_schema=
         "uri": {
             "type": "string",
             "description": "The URI (or IRI) of the image.",
-            "format": "iri-reference",
+            // TODO
+            //"format": "iri-reference",
             // "The URI (or IRI) of the image.  Relative paths are relative to the current glTF asset.  Instead of referencing an external file, this field **MAY** contain a `data:`-URI. This field **MUST NOT** be defined when `bufferView` is defined.",
-            "gltf_uriType": "image"
+            //"gltf_uriType": "image"
         },
         "mimeType": {
             "anyOf": [
@@ -1642,7 +1685,7 @@ mesh_primitive_schema=
             "allOf": [ { "$ref": "glTFid.schema.json" } ],
             "description": "The index of the accessor that contains the vertex indices.",
             // "The index of the accessor that contains the vertex indices.  When this is undefined, the primitive defines non-indexed geometry.  When defined, the accessor **MUST** have `SCALAR` type and an unsigned integer component type.",
-            "gltf_webgl": "`drawElements()` when defined and `drawArrays()` otherwise."
+            // "`drawElements()` when defined and `drawArrays()` otherwise."
         },
         "material": {
             "allOf": [ { "$ref": "glTFid.schema.json" } ],
@@ -1708,7 +1751,7 @@ mesh_primitive_schema=
         "extensions": { },
         "extras": { }
     },
-    "gltf_webgl": "`drawElements()` and `drawArrays()`",
+    // "`drawElements()` and `drawArrays()`",
     "required": [ "attributes" ]
 }
 , 
@@ -1755,7 +1798,7 @@ sampler_schema=
     "properties": {
         "magFilter": {
             "description": "Magnification filter.",
-            "gltf_webgl": "`samplerParameteri()` with pname equal to TEXTURE_MAG_FILTER",
+            // "`samplerParameteri()` with pname equal to TEXTURE_MAG_FILTER",
             "anyOf": [
                 {
                     "const": 9728,
@@ -1774,7 +1817,7 @@ sampler_schema=
         },
         "minFilter": {
             "description": "Minification filter.",
-            "gltf_webgl": "`samplerParameteri()` with pname equal to TEXTURE_MIN_FILTER",
+            // "`samplerParameteri()` with pname equal to TEXTURE_MIN_FILTER",
             "anyOf": [
                 {
                     "const": 9728,
@@ -1815,7 +1858,7 @@ sampler_schema=
             "description": "S (U) wrapping mode.",
             "default": 10497,
             // "S (U) wrapping mode.  All valid values correspond to WebGL enums.",
-            "gltf_webgl": "`samplerParameteri()` with pname equal to TEXTURE_WRAP_S",
+            // "`samplerParameteri()` with pname equal to TEXTURE_WRAP_S",
             "anyOf": [
                 {
                     "const": 33071,
@@ -1840,7 +1883,7 @@ sampler_schema=
         "wrapT": {
             "description": "T (V) wrapping mode.",
             "default": 10497,
-            "gltf_webgl": "`samplerParameteri()` with pname equal to TEXTURE_WRAP_T",
+            // "`samplerParameteri()` with pname equal to TEXTURE_WRAP_T",
             "anyOf": [
                 {
                     "const": 33071,
@@ -1949,7 +1992,7 @@ texture_schema=
         "extensions": { },
         "extras": { }
     },
-    "gltf_webgl": "`createTexture()`, `deleteTexture()`, `bindTexture()`, `texImage2D()`, and `texParameterf()`"
+    // "`createTexture()`, `deleteTexture()`, `bindTexture()`, `texImage2D()`, and `texParameterf()`"
 }
 , 
 textureInfo_schema= 
@@ -2028,9 +2071,10 @@ const ajv = new Ajv({
     skin_schema, 
     texture_schema, 
     textureInfo_schema, 
-    ]})
+    ],
+    allErrors: true})
     //TODO
-const validate = ajv.getSchema("glTF.OCES_eyes.schema.json");
+const validate = ajv.getSchema("glTF.schema.json");
 function readFile() {
     var fileInput = document.getElementById('fileInput');
     var file = fileInput.files[0];
@@ -2050,7 +2094,7 @@ function readFile() {
             if(!valid){
                 console.log(validate.errors);
                 document.getElementById('fileContent').textContent = 
-                ajv.errorsText(validate.errors, {dataVar: "data", schemaVar: "schema", separator: '<br>'});
+                ajv.errorsText(validate.errors, {dataVar: "data", schemaVar: "schema", separator: '\n'});
                 document.getElementById('scrollContainer').style.textAlign = 'left';
             } else {
                 console.log("Valid CEM file!");
