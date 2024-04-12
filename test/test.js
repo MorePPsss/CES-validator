@@ -4,10 +4,20 @@ const schema = {
     "$id": "http://example.com/schemas/schema.json",
     "type": "object",
     "properties": {
-      "foo": {"$ref": "defs.json#/definitions/int"},
-      "bar": {"$ref": "defs.json#/definitions/str"},
-    },
-    "required": ["foo"]
+      "ommatidialProperties": {
+        "type": "object",
+        "properties" : {
+          "foo": {
+            "description":"3D Vector",
+            "type":"array",
+            "items": {"type" : "number"},
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        "required": ["foo"]
+      }
+    }
 };
   
   const defsSchema = {
@@ -29,7 +39,9 @@ const validate = ajv.compile(schema);
 
 // 测试数据
 const data = {
-    foo: 25
+    "ommatidialProperties": {
+      "foo": [0,0,0]
+    }
 };
 
 // 验证数据是否符合 JSON Schema

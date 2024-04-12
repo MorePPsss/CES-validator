@@ -1,50 +1,76 @@
 //schemas
-const eye_point_ommatidial_schema = {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "OCES_eyes.eye.point_ommatidial.schema.json",
-  "title": "OCES_eyes Point-ommatidial eye data properties definition",
-  "description": "This schema defines all properties that are unique to point-ommatidial eye datasets.",
-  "type": "object",
-  "properties": {
-    "type": {
-      "description": "The type of eye. This schema defines the point-ommatidial type.",
-      "const": "POINT_OMMATIDIAL"
-    },
-    "ommatidialProperties": {
-      "description": "Point-ommatidial eyes require these ommatidial properties to be defined.",
-      "type": "object",
-      // 这四项需是object才可被required
-      "properties": {
-        "POSITION": {
-          "description":"3D Vector",
-          "type":"array",
-          "items": {"type" : "number"},
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "ORIENTATION": {
-          "description":"3D Vector",
-          "type":"array",
-          "items": {"type" : "number"},
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "FOCAL_OFFSET": {
-          "oneOf":[
-            {"description":"3D Vector",
-            "type":"array",
-            "items": {"type" : "number"},
-            "minItems": 3,
-            "maxItems": 3},
-            {"type":"number"}
-          ]
-        },
-        "DIAMETER": {"type":"number"},
+
+const glTF_OCES_eyes_schema = {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "glTF.OCES_eyes.schema.json",
+    "title": "OCES_eyes glTF Document Extension",
+    "type": "object",
+    //: "This defines version 0.3.0",
+    "allOf": [ { "$ref": "glTFProperty.schema.json" } ],
+    "properties": {
+      "version": {
+        "description": "The version of the OCES_eyes extension standard this file is built against. Must be in the format major.minor.fix and must match an extant OOCES version.",
+        "type": "string",
+        "pattern": "^[0-9]+.[0-9]+.[0-9]+$"
       },
-      "required": ["POSITION", "ORIENTATION", "FOCAL_OFFSET", "DIAMETER"]
+      "generator": {
+        "description": "The name and model number of the tool that generated the OCES-specific (or all) parts of this file.",
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the tool that generated the OCES-specific (or all) parts of this file.",
+            "type": "string"
+          },
+          "version": {
+            "description": "The version of the tool that generated the OCES-specific (or all) parts of this file.",
+            "type": "string"
+          }
+        }
+      },
+      // "creationDatetime": {
+      //   "description": "The date and time when the file was created.",
+      //   "type": "string",
+      //   "format": "date-time"
+      // },
+      "maximumRenderDistance": {
+        "description": "Somewhat implementation-specific: The maximum distance from an eye at which objects are still rendered (in top-level worldspace).",
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "extensions": {},
+      "extensionsUsed": {},
+      "extensionsRequired": {},
+      "extras": {},
+      "mirrorPlanes": {
+        "description": "A list of mirror planes (in an arbitrary coordinate system that is interpreted by an individual eye as matching it's associated head's coordinate system) that are used to mirror eye objects. To be referenced by eye objects via index",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "$ref": "OCES_eyes.mirrorPlane.schema.json"
+        },
+        "minItems": 1
+      },
+      "ommatidialProperties": {
+        "description": "A list of ommatidial properties (in the local ommatidial coordinate space) that describe the surface property distribution of a specified feature over an eye",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "$ref": "OCES_eyes.ommatidialProperty.schema.json"
+        },
+        "minItems": 1
+      },
+      "eyes": {
+        "description": "A list of eyes objects to be attached to nodes via index reference.",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "$ref": "OCES_eyes.eye.schema.json"
+        },
+        "minItems": 1
+      }
     },
-  },
-  //: "Point-ommatidial eyes have no unique properties outside of those defined in the base eye schema."
+    // 增加了 eyes
+    "required": ["version", "eyes"]
 },
 
 eye_schema = {
@@ -52,16 +78,16 @@ eye_schema = {
   "$id": "OCES_eyes.eye.schema.json",
   "title": "OCES_eyes Top-level eye properties definition",
   "description": "The top-level schema for an eye, defining the structure that all eyes must follow.",
-  //: "This is the top-level schema for an eye - all eyes must have these properties, and specify an eye type that indicates further required properties",
+  // This is the top-level schema for an eye - all eyes must have these properties, and specify an eye type that indicates further required properties",
   "type": "object",
   "allOf": [
     {
       "$ref": "OCES_eyes.eye.shared.schema.json",
-      //: "Include all the properties that every eye type shares"
+      // Include all the properties that every eye type shares"
     }
   ],
   "oneOf": [
-    { "$ref": "OCES_eyes.eye.point_ommatidial.schema.json"},//!!
+    { "$ref": "OCES_eyes.eye.point_ommatidial.schema.json"},
     { "$ref": "OCES_eyes.eye.surface.schema.json" },
     { "$ref": "OCES_eyes.eye.spherical.schema.json" }
   ]
@@ -101,13 +127,130 @@ eye_shared_schema = {
       //!! 原来是descrtiption
       "description": "An JSON key-value object that acts as a named list of the id(s) of the property set(s) to use to describe this eye's per-ommatidial data (in the Local Ommatidial Coordinate Space, defined relative to this eye's origin. The properties describe this eye's per-ommatidial data (such as position, orientation, facet diameter etc., depending on the type of eye data defined).",
       //More complex schema that actually layout which properties of each eye data type are defined in their individual schema files - this schema just specifies that they are of the eyeProperty type
-      "type": "object",
-      "additionalProperties": {
-        //Every eye has a list of ommatidial properties to define the distribution of per-ommatidial properties
-        "allOf": [ { "$ref": "glTFid.schema.json" } ]
-      }
+      "type": "object"
     }
   }
+},
+
+eye_point_ommatidial_schema = {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "OCES_eyes.eye.point_ommatidial.schema.json",
+    "title": "OCES_eyes Point-ommatidial eye data properties definition",
+    "description": "This schema defines all properties that are unique to point-ommatidial eye datasets.",
+    "type": "object",
+    "properties": {
+      "type": {
+        "description": "The type of eye. This schema defines the point-ommatidial type.",
+        "const": "POINT_OMMATIDIAL"
+      },
+      "ommatidialProperties": {
+        "description": "Point-ommatidial eyes require these ommatidial properties to be defined.",
+        "type": "object",
+        // 这四项需是object才可被required
+        "properties": {
+          "POSITION": {
+            "description":"3D Vector",
+            "type":"array",
+            "items": {"type" : "number"},
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "ORIENTATION": {
+            "description":"3D Vector",
+            "type":"array",
+            "items": {"type" : "number"},
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "FOCAL_OFFSET": {
+            "oneOf":[
+              {"description":"3D Vector",
+              "type":"array",
+              "items": {"type" : "number"},
+              "minItems": 3,
+              "maxItems": 3},
+              {"type":"number"}
+            ]
+          },
+          "DIAMETER": {"type":"number"}
+        },
+        "required": ["POSITION", "ORIENTATION", "FOCAL_OFFSET", "DIAMETER"]
+      },
+    },
+    // "Point-ommatidial eyes have no unique properties outside of those defined in the base eye schema."
+},
+
+eye_surface_schema = {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "OCES_eyes.eye.surface.schema.json",
+    "title": "OCES_eyes Surface mesh eye data properties definition",
+    "description": "This schema defines all properties that are unique to surface mesh-based eye datasets.",
+    "type": "object",
+    "properties": {
+      "type": {
+        "description": "The type of eye. This schema defines the surface mesh type.",
+        "const": "SURFACE"
+      },
+      "ommatidialCount": {
+        "description": "The number of ommatidia in the eye.",
+        "type": "integer",
+        "minimum": 1
+      },
+      "ommatidialProperties": {
+        "description": "Surface mesh eyes require these ommatidial properties to be defined.",
+        "type": "object",
+        "required": ["DIAMETER", "FOCAL_OFFSET"]
+      },
+      "surface": {
+        "description": "Defines the surface mesh of the eye. Similar to glTF's mesh 'attributes' property, but simplified.",
+        "type": "object",
+        // The first properties set bewlo defines the 3 required attributes: 'POSITION', 'NORMAL' and 'INDICES'
+        "properties": {
+          "POSITION": {
+            "description": "A reference to a glTF accessor that stores the 3D vertex positions of the eye surface, must be the same length as the NORMAL accessor.",
+            
+          },
+          "NORMAL": {
+            "description": "A reference to a glTF accessor that stores the 3D vertex normals of the eye surface, must be the same length as the POSITION accessor.",
+            
+          },
+          "INDICES": {
+            "description": "A reference to a glTF accessor that stores the indices of the 3D eye surface triangles, interpreted as triplets of indices to indicate the vertex/normal pair that make up each corner of the triangles, in counter-clockwise winding order.",
+            "type": "integer",
+            "multipleOf": 3
+            //!!原来是multple
+          }
+        },
+        "required": ["POSITION", "NORMAL", "INDICES"],
+        //"$comment": "This 'anyOf'/'not' combination enforces that if either one of 'TEXTURE_COORD' or 'TEXTURE_INDICES' is defined, the other is also defined.",
+        "anyOf":[
+          {
+            //"$comment": "This block fails if any of 'TEXTURE_COORD' or 'TEXTURE_INDICES' are defined, meaning that if any are defined, the next block has to succeed for the file to be valid.",
+            "not": {
+              "anyOf": [
+                { "required": ["TEXTURE_COORD"] },
+                { "required": ["TEXTURE_INDICES"] }
+              ]
+            }
+          },
+          {
+            //"$comment": "This block only succeeds if both 'TEXTURE_COORD' and 'TEXTURE_INDICES' are defined.",
+            "properties": {
+              "TEXTURE_COORD": {
+                "description": "Reference to a glTF accessor that stores the 2D texture coordinates of the eye surface, must be the same length as the POSITION and NORMAL accessors, i.e. defined for each vertex on the mesh.",
+                "allOf": [ { "$ref": "glTFid.schema.json" } ]
+              },
+              "TEXTURE_INDICES": {
+                "description": "Reference to a glTF accessor that stores the indices of the 2D triangles in texture coordinate space of the eye surface, must be the same length as the INDICES accessor, i.e. each 3D triangle defined in INDICES must have an associated 2D triangle.",
+                "allOf": [ { "$ref": "glTFid.schema.json" } ]
+              }
+            },
+            "required": ["TEXTURE_COORD", "TEXTURE_INDICES"]
+          }
+        ]
+      }
+    },
+    "required": ["ommatidialCount", "surface"]
 },
 
 eye_spherical_schema = {
@@ -142,152 +285,6 @@ eye_spherical_schema = {
   "required": ["ommatidialCount"]
 },
 
-eye_surface_schema = {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "OCES_eyes.eye.surface.schema.json",
-  "title": "OCES_eyes Surface mesh eye data properties definition",
-  "description": "This schema defines all properties that are unique to surface mesh-based eye datasets.",
-  "type": "object",
-  "properties": {
-    "type": {
-      "description": "The type of eye. This schema defines the surface mesh type.",
-      "const": "SURFACE"
-    },
-    "ommatidialCount": {
-      "description": "The number of ommatidia in the eye.",
-      "type": "integer",
-      "minimum": 1
-    },
-    "ommatidialProperties": {
-      "description": "Surface mesh eyes require these ommatidial properties to be defined.",
-      "type": "object",
-      "required": ["DIAMETER", "FOCAL_OFFSET"]
-    },
-    "surface": {
-      "description": "Defines the surface mesh of the eye. Similar to glTF's mesh 'attributes' property, but simplified.",
-      "type": "object",
-      // The first properties set bewlo defines the 3 required attributes: 'POSITION', 'NORMAL' and 'INDICES'
-      "properties": {
-        "POSITION": {
-          "description": "A reference to a glTF accessor that stores the 3D vertex positions of the eye surface, must be the same length as the NORMAL accessor.",
-          "allOf": [ { "$ref": "glTFid.schema.json" } ]
-        },
-        "NORMAL": {
-          "description": "A reference to a glTF accessor that stores the 3D vertex normals of the eye surface, must be the same length as the POSITION accessor.",
-          "allOf": [ { "$ref": "glTFid.schema.json" } ]
-        },
-        "INDICES": {
-          "description": "A reference to a glTF accessor that stores the indices of the 3D eye surface triangles, interpreted as triplets of indices to indicate the vertex/normal pair that make up each corner of the triangles, in counter-clockwise winding order.",
-          "type": "integer",
-          "allOf": [ { "$ref": "glTFid.schema.json" } ],
-          "multipleOf": 3
-          //!!原来是multple
-        }
-      },
-      "required": ["POSITION", "NORMAL", "INDICES"],
-      //"$comment": "This 'anyOf'/'not' combination enforces that if either one of 'TEXTURE_COORD' or 'TEXTURE_INDICES' is defined, the other is also defined.",
-      "anyOf":[
-        {
-          //"$comment": "This block fails if any of 'TEXTURE_COORD' or 'TEXTURE_INDICES' are defined, meaning that if any are defined, the next block has to succeed for the file to be valid.",
-          "not": {
-            "anyOf": [
-              { "required": ["TEXTURE_COORD"] },
-              { "required": ["TEXTURE_INDICES"] }
-            ]
-          }
-        },
-        {
-          //"$comment": "This block only succeeds if both 'TEXTURE_COORD' and 'TEXTURE_INDICES' are defined.",
-          "properties": {
-            "TEXTURE_COORD": {
-              "description": "Reference to a glTF accessor that stores the 2D texture coordinates of the eye surface, must be the same length as the POSITION and NORMAL accessors, i.e. defined for each vertex on the mesh.",
-              "allOf": [ { "$ref": "glTFid.schema.json" } ]
-            },
-            "TEXTURE_INDICES": {
-              "description": "Reference to a glTF accessor that stores the indices of the 2D triangles in texture coordinate space of the eye surface, must be the same length as the INDICES accessor, i.e. each 3D triangle defined in INDICES must have an associated 2D triangle.",
-              "allOf": [ { "$ref": "glTFid.schema.json" } ]
-            }
-          },
-          "required": ["TEXTURE_COORD", "TEXTURE_INDICES"]
-        }
-      ]
-    }
-  },
-  "required": ["ommatidialCount", "surface"]
-},
-
-glTF_OCES_eyes_schema = {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "glTF.OCES_eyes.schema.json",
-  "title": "OCES_eyes glTF Document Extension",
-  "type": "object",
-  //: "This defines version 0.3.0",
-  "allOf": [ { "$ref": "glTFProperty.schema.json" } ],
-  "properties": {
-    "version": {
-      "description": "The version of the OCES_eyes extension standard this file is built against. Must be in the format major.minor.fix and must match an extant OOCES version.",
-      "type": "string",
-      "pattern": "^[0-9]+.[0-9]+.[0-9]+$"
-    },
-    "generator": {
-      "description": "The name and model number of the tool that generated the OCES-specific (or all) parts of this file.",
-      "type": "object",
-      "properties": {
-        "name": {
-          "description": "The name of the tool that generated the OCES-specific (or all) parts of this file.",
-          "type": "string"
-        },
-        "version": {
-          "description": "The version of the tool that generated the OCES-specific (or all) parts of this file.",
-          "type": "string"
-        }
-      }
-    },
-    // "creationDatetime": {
-    //   "description": "The date and time when the file was created.",
-    //   "type": "string",
-    //   "format": "date-time"
-    // },
-    "maximumRenderDistance": {
-      "description": "Somewhat implementation-specific: The maximum distance from an eye at which objects are still rendered (in top-level worldspace).",
-      "type": "number",
-      "exclusiveMinimum": 0
-    },
-    "extensions": {},
-    "extensionsUsed": {},
-    "extensionsRequired": {},
-    "extras": {},
-    "mirrorPlanes": {
-      "description": "A list of mirror planes (in an arbitrary coordinate system that is interpreted by an individual eye as matching it's associated head's coordinate system) that are used to mirror eye objects. To be referenced by eye objects via index",
-      "type": "array",
-      "items": {
-        "type": "object",
-        "$ref": "OCES_eyes.mirrorPlane.schema.json"
-      },
-      "minItems": 1
-    },
-    "ommatidialProperties": {
-      "description": "A list of ommatidial properties (in the local ommatidial coordinate space) that describe the surface property distribution of a specified feature over an eye",
-      "type": "array",
-      "items": {
-        "type": "object",
-        "$ref": "OCES_eyes.ommatidialProperty.schema.json"
-      },
-      "minItems": 1
-    },
-    "eyes": {
-      "description": "A list of eyes objects to be attached to nodes via index reference.",
-      "type": "array",
-      "items": {
-        "type": "object",
-        "$ref": "OCES_eyes.eye.schema.json"
-      },
-      "minItems": 1
-    }
-  },
-  // 增加了 eyes
-  "required": ["version", "eyes"]
-},
 
 mirrorPlane_schema = {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -338,6 +335,7 @@ mirrorPlane_schema = {
     }
   }
 },
+
 node_schema= 
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -436,6 +434,7 @@ node_schema=
         ]
     }
 },
+
 node_OCES_eyes_schema = {
     //!! 这个schema是用在node下extensions中的OCES_eyes模块的
     //!! enabled属性并没出现啊？
@@ -474,6 +473,30 @@ node_OCES_eyes_schema = {
   }
 },
 
+
+ommatidialProperty_schema = {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "OCES_eyes.ommatidialProperty.schema.json",
+    "title": "OCES_eyes Ommatidial property definition",
+    "description": "Ommatidial properties are the property 'layers' that can be used to describe the distribution of a value over the ommatidia in an eye. This schema defines a list of these layers that can be applied to any type of eye.",
+    "type": "object",
+    "allOf": [ { "$ref": "glTFChildOfRootProperty.schema.json" } ],
+    "oneOf": [
+      { "$ref": "OCES_eyes.ommatidialProperty.coarse.schema.json" },
+      { "$ref": "OCES_eyes.ommatidialProperty.accessor.schema.json" },
+      { "$ref": "OCES_eyes.ommatidialProperty.texture.schema.json" }
+    ],
+    "properties": {
+      "name": {
+        "description": "The user-defined name of this ommatidial property. Used only for user reference to differentiate between ommatidial property sets in the list of all property sets, not to define how the property is applied to any specific eye.",
+        "type": "string",
+        "default": ""
+      }
+    },
+    //"$comment": "Type and value must be specified for every eye property, regardless of which type it is:",
+    "required": ["type", "value"]
+},
+
 ommatidialProperty_accessor_schema = {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "OCES_eyes.ommatidialProperty.accessor.schema.json",
@@ -503,6 +526,7 @@ ommatidialProperty_coarse_schema = {
   "properties": {
     "type": {
       "description": "Specifies that the eye property is stored directly as a coarse value.",
+      "type": "string",
       "const": "COARSE"
     },
     "value": {
@@ -537,28 +561,6 @@ ommatidialProperty_coarse_schema = {
   }
 },
 
-ommatidialProperty_schema = {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "OCES_eyes.ommatidialProperty.schema.json",
-  "title": "OCES_eyes Ommatidial property definition",
-  "description": "Ommatidial properties are the property 'layers' that can be used to describe the distribution of a value over the ommatidia in an eye. This schema defines a list of these layers that can be applied to any type of eye.",
-  "type": "object",
-  "allOf": [ { "$ref": "glTFChildOfRootProperty.schema.json" } ],
-  "oneOf": [
-    { "$ref": "OCES_eyes.ommatidialProperty.coarse.schema.json" },
-    { "$ref": "OCES_eyes.ommatidialProperty.accessor.schema.json" },
-    { "$ref": "OCES_eyes.ommatidialProperty.texture.schema.json" }
-  ],
-  "properties": {
-    "name": {
-      "description": "The user-defined name of this ommatidial property. Used only for user reference to differentiate between ommatidial property sets in the list of all property sets, not to define how the property is applied to any specific eye.",
-      "type": "string",
-      "default": ""
-    }
-  },
-  //"$comment": "Type and value must be specified for every eye property, regardless of which type it is:",
-  "required": ["type", "value"]
-},
 
 ommatidialProperty_texture_schema = {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
