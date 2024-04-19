@@ -27,11 +27,11 @@ const glTF_OCES_eyes_schema = {
           }
         }
       },
-      // "creationDatetime": {
-      //   "description": "The date and time when the file was created.",
-      //   "type": "string",
-      //   "format": "date-time"
-      // },
+      "creationDatetime": {
+        "description": "The date and time when the file was created.",
+        "type": "string",
+        "format": "date-time"
+      },
       "maximumRenderDistance": {
         "description": "Somewhat implementation-specific: The maximum distance from an eye at which objects are still rendered (in top-level worldspace).",
         "type": "number",
@@ -44,32 +44,22 @@ const glTF_OCES_eyes_schema = {
       "mirrorPlanes": {
         "description": "A list of mirror planes (in an arbitrary coordinate system that is interpreted by an individual eye as matching it's associated head's coordinate system) that are used to mirror eye objects. To be referenced by eye objects via index",
         "type": "array",
-        "items": {
-          "type": "object",
-          "$ref": "OCES_eyes.mirrorPlane.schema.json"
-        },
+        "items": {"$ref": "OCES_eyes.mirrorPlane.schema.json"},
         "minItems": 1
       },
       "ommatidialProperties": {
         "description": "A list of ommatidial properties (in the local ommatidial coordinate space) that describe the surface property distribution of a specified feature over an eye",
         "type": "array",
-        "items": {
-          "type": "object",
-          "$ref": "OCES_eyes.ommatidialProperty.schema.json"
-        },
+        "items": {"$ref": "OCES_eyes.ommatidialProperty.schema.json"},
         "minItems": 1
       },
       "eyes": {
         "description": "A list of eyes objects to be attached to nodes via index reference.",
         "type": "array",
-        "items": {
-          "type": "object",
-          "$ref": "OCES_eyes.eye.schema.json"
-        },
+        "items": {"$ref": "OCES_eyes.eye.schema.json"},
         "minItems": 1
       }
     },
-    // 增加了 eyes
     "required": ["version", "eyes"]
 },
 
@@ -129,7 +119,8 @@ eye_shared_schema = {
       //More complex schema that actually layout which properties of each eye data type are defined in their individual schema files - this schema just specifies that they are of the eyeProperty type
       "type": "object"
     }
-  }
+  },
+  "required": ["type"]
 },
 
 eye_point_ommatidial_schema = {
@@ -285,7 +276,6 @@ eye_spherical_schema = {
   "required": ["ommatidialCount"]
 },
 
-
 mirrorPlane_schema = {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "OCES_eyes.mirrorPlane.schema.json",
@@ -331,6 +321,127 @@ mirrorPlane_schema = {
           "description": "An alias for a normal along the HCS Z axis.",
           "enum": ["Z", "SAGITTAL", "ANTERIOR", "POSTERIOR", "ANTEPOSTERIOR", "FORWARD", "BACKWARD", "FRONT", "BACK"]
         }
+      ]
+    }
+  }
+},
+
+ommatidialProperty_schema = {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "OCES_eyes.ommatidialProperty.schema.json",
+    "title": "OCES_eyes Ommatidial property definition",
+    "description": "Ommatidial properties are the property 'layers' that can be used to describe the distribution of a value over the ommatidia in an eye. This schema defines a list of these layers that can be applied to any type of eye.",
+    "type": "object",
+    "allOf": [ { "$ref": "glTFChildOfRootProperty.schema.json" } ],
+    "oneOf": [
+      { "$ref": "OCES_eyes.ommatidialProperty.coarse.schema.json" },
+      { "$ref": "OCES_eyes.ommatidialProperty.accessor.schema.json" },
+      { "$ref": "OCES_eyes.ommatidialProperty.texture.schema.json" }
+    ],
+    "properties": {
+      "name": {
+        "description": "The user-defined name of this ommatidial property. Used only for user reference to differentiate between ommatidial property sets in the list of all property sets, not to define how the property is applied to any specific eye.",
+        "type": "string",
+        "default": ""
+      }
+    },
+    // Type and value must be specified for every eye property, regardless of which type it is
+    "required": ["type", "value"]
+},
+
+ommatidialProperty_accessor_schema = {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "OCES_eyes.ommatidialProperty.accessor.schema.json",
+  "description": "An ommatidial property set stored as an accessor, referenced via a glTF id.",
+  "type": "object",
+  "properties": {
+    "type": {
+      "description": "Specifies that the ommatidial property set is stored in an accessor.",
+      "const": "ACCESSOR"
+    },
+    "value": {
+      "description": "The id of the accessor or texture storing the eye properties.",
+      "anyOf": [ { "$ref": "glTFid.schema.json" } ]
+    },
+    "dataStride": {
+      "description": "It may be necessary to use custom data that does not fit the glTF types of SCALAR, VEC2/3/4 or MAT2/3/4, for instance, when a time-series is required or polygons defined by an arbitrarily long list of VEC2s. This allows that data to be specified alongside regular eye properties.",
+      "default": 1
+    }
+  }
+},
+
+ommatidialProperty_coarse_schema = {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "OCES_eyes.ommatidialProperty.coarse.schema.json",
+  "description": "A directly-specified coarse ommatidial property value.",
+  "type": "object",
+  "properties": {
+    "type": {
+      "description": "Specifies that the eye property is stored directly as a coarse value.",
+      "type": "string",
+      "const": "COARSE"
+    },
+    "value": {
+      "description": "The raw value of the eye property, stored as a single datapoint of the same type that would be stored in the accessor or texture. Typically a 1/2/3/4-D vector in the case of textures where there can be up to 4 channels, and an ND vector in the case of accessor arrays, where the accessor can reference an array of any length, which can then in-turn be interpreted as an array of some multiple of objects",
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "description": "A single-dimensional array of numbers.",
+                "type": "number"
+              },
+              {
+                "description": "A 2D array of numbers of arbitrary length, but all sub-arrays must be of the same length and between 2 and 16 values long.",
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 2,
+                "maxItems": 16
+              }
+            ]
+          },
+          "minItems": 2
+        }
+      ]
+    }
+  }
+},
+
+ommatidialProperty_texture_schema = {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "OCES_eyes.ommatidialProperty.texture.schema.json",
+  "title": "OCES_eyes TEXTURE ommatidial properties definition.",
+  "description": "An ommatidial property set stored as a texture, referenced via a glTF id.",
+  "type": "object",
+  "properties": {
+    "type": {
+      "description": "Specifies whether the eye properties are stored in an accessor or a texture.",
+      "const": "TEXTURE"
+    },
+    "value": {
+      "description": "The id of the accessor or texture storing the eye properties.",
+      "anyOf": [ { "$ref": "glTFid.schema.json" } ]
+    },
+    "textureScale": {
+      "description": "A scaling factor to apply to the retrieved texture values. 1-4 dimensional. Recommended 1 dimensional. Must be either 1 dimensional (applied to all dimensions of returned texture values) or match the dimensionality of the texture referenced by this ommatidialProperty (i.e. an RGB image can have a texture scale that is a singular number or a 3D vector of 3 numbers).",
+      // 没必要 "anyOf" in "type"
+      "anyOf": [
+          { "type": "number" },
+          { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 4 }
+        ]
+    },
+    "textureCenter": {
+      "description": "An offset value that is subtracted from all retrieved texture values before being scaled by the textureScale value. Must be either 1 dimensional (applied to all dimensions of returned texture values) or match the dimensionality of the texture referenced by this ommatidialProperty (i.e. an RGB image can have a texture scale that is a singular number or a 3D vector of 3 numbers).",
+      // 这里一样
+      "anyOf": [
+          { "type": "number" },
+          { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 4 }
       ]
     }
   }
@@ -470,129 +581,6 @@ node_OCES_eyes_schema = {
     //!!
     "extensions": {},
     "extras": {}
-  }
-},
-
-
-ommatidialProperty_schema = {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "OCES_eyes.ommatidialProperty.schema.json",
-    "title": "OCES_eyes Ommatidial property definition",
-    "description": "Ommatidial properties are the property 'layers' that can be used to describe the distribution of a value over the ommatidia in an eye. This schema defines a list of these layers that can be applied to any type of eye.",
-    "type": "object",
-    "allOf": [ { "$ref": "glTFChildOfRootProperty.schema.json" } ],
-    "oneOf": [
-      { "$ref": "OCES_eyes.ommatidialProperty.coarse.schema.json" },
-      { "$ref": "OCES_eyes.ommatidialProperty.accessor.schema.json" },
-      { "$ref": "OCES_eyes.ommatidialProperty.texture.schema.json" }
-    ],
-    "properties": {
-      "name": {
-        "description": "The user-defined name of this ommatidial property. Used only for user reference to differentiate between ommatidial property sets in the list of all property sets, not to define how the property is applied to any specific eye.",
-        "type": "string",
-        "default": ""
-      }
-    },
-    //"$comment": "Type and value must be specified for every eye property, regardless of which type it is:",
-    "required": ["type", "value"]
-},
-
-ommatidialProperty_accessor_schema = {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "OCES_eyes.ommatidialProperty.accessor.schema.json",
-  "description": "An ommatidial property set stored as an accessor, referenced via a glTF id.",
-  "type": "object",
-  "properties": {
-    "type": {
-      "description": "Specifies that the ommatidial property set is stored in an accessor.",
-      "const": "ACCESSOR"
-    },
-    "value": {
-      "description": "The id of the accessor or texture storing the eye properties.",
-      "anyOf": [ { "$ref": "glTFid.schema.json" } ]
-    },
-    "dataStride": {
-      "description": "It may be necessary to use custom data that does not fit the glTF types of SCALAR, VEC2/3/4 or MAT2/3/4, for instance, when a time-series is required or polygons defined by an arbitrarily long list of VEC2s. This allows that data to be specified alongside regular eye properties.",
-      "default": 1
-    }
-  }
-},
-
-ommatidialProperty_coarse_schema = {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "OCES_eyes.ommatidialProperty.coarse.schema.json",
-  "description": "A directly-specified coarse ommatidial property value.",
-  "type": "object",
-  "properties": {
-    "type": {
-      "description": "Specifies that the eye property is stored directly as a coarse value.",
-      "type": "string",
-      "const": "COARSE"
-    },
-    "value": {
-      "description": "The raw value of the eye property, stored as a single datapoint of the same type that would be stored in the accessor or texture. Typically a 1/2/3/4-D vector in the case of textures where there can be up to 4 channels, and an ND vector in the case of accessor arrays, where the accessor can reference an array of any length, which can then in-turn be interpreted as an array of some multiple of objects",
-      "anyOf": [
-        {
-          "type": "number"
-        },
-        {
-          "type": "array",
-          "items": {
-            "anyOf": [
-              {
-                "description": "A single-dimensional array of numbers.",
-                "type": "number"
-              },
-              {
-                "description": "A 2D array of numbers of arbitrary length, but all sub-arrays must be of the same length and between 2 and 16 values long.",
-                "type": "array",
-                "items": {
-                  "type": "number"
-                },
-                "minItems": 2,
-                "maxItems": 16
-              }
-            ]
-          },
-          "minItems": 2
-        }
-      ]
-    }
-  }
-},
-
-
-ommatidialProperty_texture_schema = {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "OCES_eyes.ommatidialProperty.texture.schema.json",
-  "title": "OCES_eyes TEXTURE ommatidial properties definition.",
-  "description": "An ommatidial property set stored as a texture, referenced via a glTF id.",
-  "type": "object",
-  "properties": {
-    "type": {
-      "description": "Specifies whether the eye properties are stored in an accessor or a texture.",
-      "const": "TEXTURE"
-    },
-    "value": {
-      "description": "The id of the accessor or texture storing the eye properties.",
-      "anyOf": [ { "$ref": "glTFid.schema.json" } ]
-    },
-    "textureScale": {
-      "description": "A scaling factor to apply to the retrieved texture values. 1-4 dimensional. Recommended 1 dimensional. Must be either 1 dimensional (applied to all dimensions of returned texture values) or match the dimensionality of the texture referenced by this ommatidialProperty (i.e. an RGB image can have a texture scale that is a singular number or a 3D vector of 3 numbers).",
-      // no need to put "anyOf" in "type"
-      "anyOf": [
-          { "type": "number" },
-          { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 4 }
-        ]
-    },
-    "textureCenter": {
-      "description": "An offset value that is subtracted from all retrieved texture values before being scaled by the textureScale value. Must be either 1 dimensional (applied to all dimensions of returned texture values) or match the dimensionality of the texture referenced by this ommatidialProperty (i.e. an RGB image can have a texture scale that is a singular number or a 3D vector of 3 numbers).",
-      // same here
-      "anyOf": [
-          { "type": "number" },
-          { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 4 }
-      ]
-    }
   }
 },
 
@@ -2076,6 +2064,45 @@ const ajv = new Ajv({
     ],
     allErrors: true})
     //TODO
+ajv.addFormat('date-time', {
+    type: 'string',
+    validate: function(data) {
+        // RFC3339 date-time 
+        const rfc3339Regex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/;
+        return rfc3339Regex.test(data);
+    }
+});
+ajv.addKeyword({
+    keyword: "isImage",
+    type: "string",
+    // 要等待图像验证操作成功后返回验证结果，是个“异步”操作
+    validate: async (schema, data) => {
+      return new Promise((resolve, reject) => {
+        // not image if data is not string type
+        if (typeof data != 'string') {
+          resolve(false);
+        }
+  
+        const img = new Image();
+        img.src = data; // check if data is valid image URL
+        img.onload = () => {
+          const width = img.width;
+          const height = img.height;
+          const isSingleChannel = width * height === data.length; // 1-channel validation
+          const isThreeChannel = width * height * 3 === data.length; // 3-channel validation
+          if (isSingleChannel || isThreeChannel) {
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        };
+        img.onerror = () => {
+          resolve(false);
+        }
+      });
+    },
+    errors: true
+});
 const validate = ajv.getSchema("glTF.schema.json");
 function readFile() {
     var fileInput = document.getElementById('fileInput');
