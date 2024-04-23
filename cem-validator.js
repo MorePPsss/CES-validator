@@ -5,6 +5,7 @@ const glTF_OCES_eyes_schema = {
     "$id": "glTF.OCES_eyes.schema.json",
     "title": "OCES_eyes glTF Document Extension",
     "type": "object",
+    "$async": true,
     //: "This defines version 0.3.0",
     "allOf": [ { "$ref": "glTFProperty.schema.json" } ],
     "properties": {
@@ -56,6 +57,7 @@ const glTF_OCES_eyes_schema = {
       "eyes": {
         "description": "A list of eyes objects to be attached to nodes via index reference.",
         "type": "array",
+        "$async": true,
         "items": {"$ref": "OCES_eyes.eye.schema.json"},
         "minItems": 1
       }
@@ -68,6 +70,7 @@ eye_schema = {
   "$id": "OCES_eyes.eye.schema.json",
   "title": "OCES_eyes Top-level eye properties definition",
   "description": "The top-level schema for an eye, defining the structure that all eyes must follow.",
+  "$async": true,
   // This is the top-level schema for an eye - all eyes must have these properties, and specify an eye type that indicates further required properties",
   "type": "object",
   "allOf": [
@@ -155,12 +158,14 @@ eye_point_ommatidial_schema = {
           },
           "FOCAL_OFFSET": {
             "oneOf":[
-              {"description":"3D Vector",
-              "type":"array",
-              "items": {"type" : "number"},
-              "minItems": 3,
-              "maxItems": 3},
-              {"type":"number"}
+                {
+                    "description":"3D Vector",
+                    "type":"array",
+                    "items": {"type": "number"},
+                    "minItems": 3,
+                    "maxItems": 3
+                },
+                {"type":"number", "not":{"const":0}, "maximum":0}
             ]
           },
           "DIAMETER": {"type":"number"}
@@ -177,6 +182,7 @@ eye_surface_schema = {
     "title": "OCES_eyes Surface mesh eye data properties definition",
     "description": "This schema defines all properties that are unique to surface mesh-based eye datasets.",
     "type": "object",
+    "$async": true,
     "properties": {
       "type": {
         "description": "The type of eye. This schema defines the surface mesh type.",
@@ -190,33 +196,102 @@ eye_surface_schema = {
       "ommatidialProperties": {
         "description": "Surface mesh eyes require these ommatidial properties to be defined.",
         "type": "object",
+        "properties": {
+            "DIAMETER": {
+                "description": "The diameter of each ommatidium’s lens",
+                "oneOf":[
+                    {"type": "number"},
+                    {"type": "string", "isSingleChannelImage": true}
+                ]
+            },
+            "FOCAL_OFFSET": {
+                "description": "The focal offset of each ommatidium in LOCS",
+                "oneOf": [
+                    {
+                        "description":"3D Vector",
+                        "type":"array",
+                        "items": {"type": "number"},
+                        "minItems": 3,
+                        "maxItems": 3
+                    },
+                    {"type":"number", "not":{"const":0}, "maximum":0}
+                ]
+            },
+            "DISPLACEMENT": {
+                "description": "Defines a 1- or 3-channel displacement (in LOCS) map over the mesh surface of the compound eye",
+                "oneOf": [
+                    {"type":"number"},
+                    {
+                        "description":"3D Vector",
+                        "type":"array",
+                        "items": {"type": "number"},
+                        "minItems": 3,
+                        "maxItems": 3
+                    },
+                    {"type":"string","isImage":true}
+                ]
+            },
+            "RELATIVE_ORIENTATION": {
+                "description": " defines 3D vectors for each ommatidium that are then added to the default orientation, with the results normalised to obtain the final ommatidial orientation",
+                "oneOf": [
+                    {
+                        "description":"3D Vector",
+                        "type":"array",
+                        "items": {"type": "number"},
+                        "minItems": 3,
+                        "maxItems": 3
+                    },
+                    {"type": "string", "isThreeChannelImage":true}
+                ]
+            },
+            "ABSOLUTE_ORIENTATION": {
+                "description": "defines a new set of ommatidial ENTATION 3-channel image direction that overwrites default ones",
+                "oneOf": [
+                    {
+                        "description":"3D Vector",
+                        "type":"array",
+                        "items": {"type": "number"},
+                        "minItems": 3,
+                        "maxItems": 3
+                    },
+                    {"type": "string", "isThreeChannelImage":true}
+                ]
+            }
+        },
+        "not": {
+            "allOf": [
+                {"required":["RELATIVE_ORIENTATION"]},
+                {"required":["ABSOLUTE_ORIENTATION"]}
+            ]
+        },
         "required": ["DIAMETER", "FOCAL_OFFSET"]
       },
       "surface": {
         "description": "Defines the surface mesh of the eye. Similar to glTF's mesh 'attributes' property, but simplified.",
         "type": "object",
-        // The first properties set bewlo defines the 3 required attributes: 'POSITION', 'NORMAL' and 'INDICES'
+        // The first properties set below defines the 3 required attributes: 'POSITION', 'NORMAL' and 'INDICES'
         "properties": {
           "POSITION": {
             "description": "A reference to a glTF accessor that stores the 3D vertex positions of the eye surface, must be the same length as the NORMAL accessor.",
-            
+            "allOf": [ { "$ref": "glTFid.schema.json" } ]
           },
           "NORMAL": {
             "description": "A reference to a glTF accessor that stores the 3D vertex normals of the eye surface, must be the same length as the POSITION accessor.",
-            
+            "allOf": [ { "$ref": "glTFid.schema.json" } ]
           },
           "INDICES": {
             "description": "A reference to a glTF accessor that stores the indices of the 3D eye surface triangles, interpreted as triplets of indices to indicate the vertex/normal pair that make up each corner of the triangles, in counter-clockwise winding order.",
             "type": "integer",
-            "multipleOf": 3
             //!!原来是multple
+            "multipleOf": 3,
+            "minimum": 0
           }
         },
         "required": ["POSITION", "NORMAL", "INDICES"],
-        //"$comment": "This 'anyOf'/'not' combination enforces that if either one of 'TEXTURE_COORD' or 'TEXTURE_INDICES' is defined, the other is also defined.",
+        // This 'anyOf'/'not' combination enforces that if either one of 'TEXTURE_COORD' or 'TEXTURE_INDICES' is defined, the other is also defined.
         "anyOf":[
           {
-            //"$comment": "This block fails if any of 'TEXTURE_COORD' or 'TEXTURE_INDICES' are defined, meaning that if any are defined, the next block has to succeed for the file to be valid.",
+            // This block fails if any of 'TEXTURE_COORD' or 'TEXTURE_INDICES' are defined, meaning that if any are defined, the next block has to succeed for the file to be valid.
             "not": {
               "anyOf": [
                 { "required": ["TEXTURE_COORD"] },
@@ -225,7 +300,7 @@ eye_surface_schema = {
             }
           },
           {
-            //"$comment": "This block only succeeds if both 'TEXTURE_COORD' and 'TEXTURE_INDICES' are defined.",
+            // This block only succeeds if both 'TEXTURE_COORD' and 'TEXTURE_INDICES' are defined.
             "properties": {
               "TEXTURE_COORD": {
                 "description": "Reference to a glTF accessor that stores the 2D texture coordinates of the eye surface, must be the same length as the POSITION and NORMAL accessors, i.e. defined for each vertex on the mesh.",
@@ -241,6 +316,7 @@ eye_surface_schema = {
         ]
       }
     },
+    // TODO 核实是否真的require ommatidialCount
     "required": ["ommatidialCount", "surface"]
 },
 
@@ -250,6 +326,7 @@ eye_spherical_schema = {
   "title": "OCES_eyes Spherical eye data properties definition",
   "description": "This schema defines all properties that are unique to spherically-defined eye datasets.",
   "type": "object",
+  "$async": true,
   "properties": {
     "type": {
       "description": "The type of eye. This schema defines the spherical type.",
@@ -365,9 +442,21 @@ ommatidialProperty_accessor_schema = {
     },
     "dataStride": {
       "description": "It may be necessary to use custom data that does not fit the glTF types of SCALAR, VEC2/3/4 or MAT2/3/4, for instance, when a time-series is required or polygons defined by an arbitrarily long list of VEC2s. This allows that data to be specified alongside regular eye properties.",
-      "default": 1
+      "anyOf": [
+        {"type": "number"},
+        {
+            "type": "array",
+            "anyOf": [
+                {"items": {"type": "number"}, "minItems":2, "maxItems":4},
+                {"items": {"type": "array", "items":{"type":"number"}, "minItems":2, "maxItems":2}, "minItems":2, "maxItems":2},
+                {"items": {"type": "array", "items":{"type":"number"}, "minItems":3, "maxItems":3}, "minItems":3, "maxItems":3},
+                {"items": {"type": "array", "items":{"type":"number"}, "minItems":4, "maxItems":4}, "minItems":4, "maxItems":4}
+            ]
+        }
+      ]
     }
-  }
+  },
+  "additionalProperties": false
 },
 
 ommatidialProperty_coarse_schema = {
@@ -410,7 +499,8 @@ ommatidialProperty_coarse_schema = {
         }
       ]
     }
-  }
+  },
+  "additionalProperties": false
 },
 
 ommatidialProperty_texture_schema = {
@@ -441,10 +531,12 @@ ommatidialProperty_texture_schema = {
       // 这里一样
       "anyOf": [
           { "type": "number" },
-          { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 4 }
+          { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+          { "type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "number"}}
       ]
     }
-  }
+  },
+  "additionalProperties": false
 },
 
 node_schema= 
@@ -1225,6 +1317,7 @@ glTF_schema=
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "glTF.schema.json",
     "title": "glTF",
+    "$async": true,
     "type": "object",
     "description": "The root object for a glTF asset.",
     "allOf": [ { "$ref": "glTFProperty.schema.json" } ],
@@ -1370,8 +1463,8 @@ glTF_schema=
             "minItems": 1
         },
         "extensions": { 
-            // changed 入点
             "type": "object",
+            "$async": true,
             "properties": {
                 "OCES_eyes": {
                     "$ref": "glTF.OCES_eyes.schema.json"
@@ -2075,35 +2168,143 @@ ajv.addFormat('date-time', {
 ajv.addKeyword({
     keyword: "isImage",
     type: "string",
-    // 要等待图像验证操作成功后返回验证结果，是个“异步”操作
-    validate: async (schema, data) => {
-      return new Promise((resolve, reject) => {
-        // not image if data is not string type
-        if (typeof data != 'string') {
-          resolve(false);
-        }
-  
-        const img = new Image();
-        img.src = data; // check if data is valid image URL
-        img.onload = () => {
-          const width = img.width;
-          const height = img.height;
-          const isSingleChannel = width * height === data.length; // 1-channel validation
-          const isThreeChannel = width * height * 3 === data.length; // 3-channel validation
-          if (isSingleChannel || isThreeChannel) {
-            resolve(true);
-          } else {
-            resolve(false);
-          }
-        };
-        img.onerror = () => {
-          resolve(false);
-        }
-      });
-    },
+    schemaType: "boolean",
+    async: true,
+    validate: checkImage,
     errors: true
 });
+ajv.addKeyword({
+    keyword: "isSingleChannelImage",
+    type: "string",
+    schemaType: "boolean",
+    async: true,
+    validate: checkSingle,
+    errors: true
+});
+ajv.addKeyword({
+    keyword: "isThreeChannelImage",
+    type: "string",
+    schemaType: "boolean",
+    async: true,
+    validate: checkThree,
+    errors: true
+});
+async function checkImage(schema, data) {
+    if (typeof data !== 'string') {
+        return false;
+    };
+    const res = await processImage(data);
+    
+};
+
+async function checkSingle(schema, data){
+    if (typeof data !== 'string') {
+        return false;
+    };
+    const res = await processSingleImage(data);
+    return res;
+};
+
+async function checkThree(schema,data){
+    if (typeof data !== 'string') {
+        return false;
+    };
+    const res = await processThreeImage(data);
+    return res;
+};
+
+async function processImage(data) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = data;
+    
+        img.onload = () => {
+            resolve(true);
+        };
+    
+        img.onerror = () => {
+            console.log("error loading image!");
+            resolve(false);
+        };
+    });
+};
+    
+async function processSingleImage(data) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = data;
+    
+        img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+    
+        canvas.width = img.width;
+        canvas.height = img.height;
+    
+        ctx.drawImage(img, 0, 0);
+    
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const pixels = imageData.data;
+        let isMonochrome = true;
+        for (let i = 0; i < pixels.length; i += 4) {
+            const r = pixels[i];
+            const g = pixels[i + 1];
+            const b = pixels[i + 2];
+            if (r !== g || g !== b) {
+            isMonochrome = false;
+            break;
+            }
+        }
+        console.log(isMonochrome);
+        resolve(isMonochrome);
+        };
+    
+        img.onerror = () => {
+        console.log("error loading image!");
+        resolve(false);
+        };
+    });
+};
+
+async function processThreeImage(data) {
+return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = data;
+
+    img.onload = () => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    ctx.drawImage(img, 0, 0);
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const pixels = imageData.data;
+    let isMonochrome = true;
+    for (let i = 0; i < pixels.length; i += 4) {
+        const r = pixels[i];
+        const g = pixels[i + 1];
+        const b = pixels[i + 2];
+        if (r !== g || g !== b) {
+        isMonochrome = false;
+        break;
+        }
+    }
+    console.log(!isMonochrome);
+    resolve(!isMonochrome);
+    };
+
+    img.onerror = () => {
+    console.log("error loading image!");
+    resolve(false);
+    };
+});
+}
+
 const validate = ajv.getSchema("glTF.schema.json");
+
 function readFile() {
     var fileInput = document.getElementById('fileInput');
     var file = fileInput.files[0];
@@ -2119,19 +2320,27 @@ function readFile() {
         try{
             const data = JSON.parse(contents);
             //validate files
-            const valid = validate(data);
-            if(!valid){
-                console.log(validate.errors);
-                document.getElementById('fileContent').textContent = 
-                ajv.errorsText(validate.errors, {dataVar: "data", schemaVar: "schema", separator: '\n'});
-                document.getElementById('scrollContainer').style.textAlign = 'left';
-            } else {
-                console.log("Valid CEM file!");
-                document.getElementById('fileContent').textContent = "Valid CEM file!";
-                document.getElementById('scrollContainer').style.textAlign = 'center';
-            }
+            validate(data)
+                .then(valid => {
+                    if (!valid) {
+                        console.log(validateAsync.errors);
+                        document.getElementById('fileContent').textContent =
+                            ajv.errorsText(validateAsync.errors, { dataVar: "data", schemaVar: "schema", separator: '\n' });
+                        document.getElementById('scrollContainer').style.textAlign = 'left';
+                    } else {
+                        console.log("Valid CEM file!");
+                        document.getElementById('fileContent').textContent = "Valid CEM file!";
+                        document.getElementById('scrollContainer').style.textAlign = 'center';
+                    }
+                })
+                .catch(error => {
+                    console.log(error.errors);
+                    document.getElementById('fileContent').textContent =
+                        ajv.errorsText(error.errors, { dataVar: "data", schemaVar: "schema", separator: '\n' });
+                    document.getElementById('scrollContainer').style.textAlign = 'left';
+                });
         } catch (error) {
-            console.error("Failed parsing JSON", error);
+            console.error("Failed parsing JSON", error.errors);
         }
     };
     reader.readAsText(file);

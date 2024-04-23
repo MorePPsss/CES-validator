@@ -113,24 +113,6 @@
             "componentType" : 5123,
             "count" : 36,
             "type" : "SCALAR"
-        },
-        {
-            "bufferView" : 4,
-            "componentType" : 5126,
-            "count" : 24,
-            "type" : "VEC3"
-        },
-        {
-            "bufferView" : 5,
-            "componentType" : 5123,
-            "count" : 36,
-            "type" : "SCALAR"
-        },
-        {
-            "bufferView" : 6,
-            "componentType" : 5126,
-            "count" : 24,
-            "type" : "VEC2"
         }
     ],
     "bufferViews" : [
@@ -210,34 +192,15 @@
                     "value": 1.0
                 },
                 {
-                    "type": "COARSE",
-                    "value": [0.0, 0.0, -1]
-                },
-                {
-                    "type": "ACCESSOR",
-                    "value": 4,
-                    "dataStride": 1
-                },
-                {
                     "type": "ACCESSOR",
                     "value": 1,
-                    "dataStride": 1
-                },
-                {
-                    "type": "ACCESSOR",
-                    "value": 1,
-                    "dataStride": 1
-                },
-                {
-                    "type": "ACCESSOR",
-                    "value": 5,
-                    "dataStride": 12
+                    "dataStride": [[1,1],[1,1]]
                 },
                 {
                     "type": "TEXTURE",
-                    "value": 0,
-                    "textureScale": 1,
-                    "textureCenter": 0.5
+                    "value": 1,
+                    "textureScale": [1,1,1,1],
+                    "textureCenter": [1,1,1,1]
                 }
             ],
 
@@ -245,12 +208,30 @@
                 {
                     "name": "example point-ommatidial eye",
                     "type": "POINT_OMMATIDIAL",
+                    "enabled": true,
+                    "mirrorPlanes":[0,1],
                     "ommatidialProperties": {
-                        "POSITION": [0,0,0],
-                        "ORIENTATION": [0,0,0],
-                        "FOCAL_OFFSET": 4,
-                        "DIAMETER": 0,
-                        "SOME_OTHER_CUSTOM_DATA": 1
+                        "POSITION": [1,1,1],
+                        "ORIENTATION": [1,1,1],
+                        "DIAMETER": 1,
+                        "FOCAL_OFFSET": -1
+                    }
+                },
+                {
+                    "name": "example surface ommatidial eye",
+                    "type": "SURFACE",
+                    "mirrorPlanes": [1,1],
+                    "ommatidialCount": 1,
+                    "surface": {
+                        "POSITION": 1,
+                        "NORMAL": 1,
+                        "INDICES": 3,
+                        "TEXTURE_COORD": 1,
+                        "TEXTURE_INDICES": 1
+                    },
+                    "ommatidialProperties": {
+                        "DIAMETER":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAAxJREFUGFdj+LpdGgAEbAHI46HWbgAAAABJRU5ErkJggg==",
+                        "FOCAL_OFFSET":-1
                     }
                 }
             ]
