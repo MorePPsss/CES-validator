@@ -230,8 +230,21 @@
                         "TEXTURE_INDICES": 1
                     },
                     "ommatidialProperties": {
-                        "DIAMETER":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAAxJREFUGFdj+LpdGgAEbAHI46HWbgAAAABJRU5ErkJggg==",
-                        "FOCAL_OFFSET":-1
+                        "DIAMETER":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAAtJREFUGFdjYAACAAAFAAGq1chRAAAAAElFTkSuQmCC",
+                        "FOCAL_OFFSET": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAAtJREFUGFdjYAACAAAFAAGq1chRAAAAAElFTkSuQmCC",
+                        "DISPLACEMENT": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAAtJREFUGFdjYAACAAAFAAGq1chRAAAAAElFTkSuQmCC",
+                        "ABSOLUTE_ORIENTATION": [1,1,1]
+                    }
+                },
+                {
+                    "name": "example spherical ommatidial eye",
+                    "type": "SPHERICAL",
+                    "ommatidialCount": 1,
+                    "radius": 1,
+                    "ommatidialProperties":{
+                        "OMMATIDIAL_BOUNDS": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAAtJREFUGFdjYAACAAAFAAGq1chRAAAAAElFTkSuQmCC",
+                        "DISPLACEMENT": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAAtJREFUGFdjYAACAAAFAAGq1chRAAAAAElFTkSuQmCC",
+                        "ABSOLUTE_ORIENTATION": [1,1,1]
                     }
                 }
             ]

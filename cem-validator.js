@@ -214,7 +214,8 @@ eye_surface_schema = {
                         "minItems": 3,
                         "maxItems": 3
                     },
-                    {"type":"number", "not":{"const":0}, "maximum":0}
+                    {"type":"number", "not":{"const":0}, "maximum":0},
+                    {"type":"string", "isImage": true}
                 ]
             },
             "DISPLACEMENT": {
@@ -344,10 +345,52 @@ eye_spherical_schema = {
       "default": 1
     },
     "ommatidialProperties": {
-      // TODO 这一块还需要定义吗？
       "type": "object",
       "description": "Spherical eyes require these ommatidial properties to be defined.",
-      "required": ["DIAMETER", "FOCAL_OFFSET"]
+      "properties": {
+        "OMMATIDIAL_BOUNDS": {
+            "description": "Specifies the extent to which ommatidia extend to on the sphere.",
+            "type": "string",
+            "isSingleChannelImage": true
+        },
+        "DISPLACEMENT": {
+            "description": "Defines a 1- or 3-channel displacement (in LOCS) map over the surface of the spherical compound eye",
+            "type": "string",
+            "isImage": true
+        },
+        "RELATIVE_ORIENTATION": {
+            "description": " defines 3D vectors for each ommatidium that are then added to the default orientation, with the results normalised to obtain the final ommatidial orientation",
+            "oneOf": [
+                {
+                    "description":"3D Vector",
+                    "type":"array",
+                    "items": {"type": "number"},
+                    "minItems": 3,
+                    "maxItems": 3
+                },
+                {"type": "string", "isThreeChannelImage":true}
+            ]
+          },
+          "ABSOLUTE_ORIENTATION": {
+            "description": "defines a new set of ommatidial ENTATION 3-channel image direction that overwrites default ones",
+            "oneOf": [
+                {
+                    "description":"3D Vector",
+                    "type":"array",
+                    "items": {"type": "number"},
+                    "minItems": 3,
+                    "maxItems": 3
+                },
+                {"type": "string", "isThreeChannelImage":true}
+            ]
+        }
+      },
+      "not": {
+        "allOf": [
+            {"required":["RELATIVE_ORIENTATION"]},
+            {"required":["ABSOLUTE_ORIENTATION"]}
+        ]
+      }
     }
   },
   "required": ["ommatidialCount"]
@@ -2154,9 +2197,7 @@ const ajv = new Ajv({
     skin_schema, 
     texture_schema, 
     textureInfo_schema, 
-    ],
-    allErrors: true})
-    //TODO
+    ]})
 ajv.addFormat('date-time', {
     type: 'string',
     validate: function(data) {
@@ -2189,14 +2230,14 @@ ajv.addKeyword({
     validate: checkThree,
     errors: true
 });
+// async functions for 1/3 channel image verification
 async function checkImage(schema, data) {
     if (typeof data !== 'string') {
         return false;
     };
     const res = await processImage(data);
-    
+    return res;
 };
-
 async function checkSingle(schema, data){
     if (typeof data !== 'string') {
         return false;
@@ -2204,7 +2245,6 @@ async function checkSingle(schema, data){
     const res = await processSingleImage(data);
     return res;
 };
-
 async function checkThree(schema,data){
     if (typeof data !== 'string') {
         return false;
@@ -2212,7 +2252,6 @@ async function checkThree(schema,data){
     const res = await processThreeImage(data);
     return res;
 };
-
 async function processImage(data) {
     return new Promise((resolve, reject) => {
         const img = new Image();
@@ -2228,7 +2267,6 @@ async function processImage(data) {
         };
     });
 };
-    
 async function processSingleImage(data) {
     return new Promise((resolve, reject) => {
         const img = new Image();
@@ -2265,7 +2303,6 @@ async function processSingleImage(data) {
         };
     });
 };
-
 async function processThreeImage(data) {
 return new Promise((resolve, reject) => {
     const img = new Image();
@@ -2301,10 +2338,12 @@ return new Promise((resolve, reject) => {
     resolve(false);
     };
 });
-}
+};
 
+// ajv validation
 const validate = ajv.getSchema("glTF.schema.json");
 
+// CEM upload function
 function readFile() {
     var fileInput = document.getElementById('fileInput');
     var file = fileInput.files[0];
@@ -2344,4 +2383,4 @@ function readFile() {
         }
     };
     reader.readAsText(file);
-}
+};
