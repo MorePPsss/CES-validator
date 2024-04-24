@@ -2353,6 +2353,7 @@ function readFile() {
         return;
     }
 
+    const errTemplate = "{keyword} validation failed on {dataPath}";
     var reader = new FileReader();
     reader.onload = function(event) {
         var contents = event.target.result;
@@ -2363,8 +2364,8 @@ function readFile() {
                 .then(valid => {
                     if (!valid) {
                         console.log(validateAsync.errors);
-                        document.getElementById('fileContent').textContent =
-                            ajv.errorsText(validateAsync.errors, { dataVar: "data", schemaVar: "schema", separator: '\n' });
+                        document.getElementById('fileContent').textContent = 
+                            ajv.errorsText(validateAsync.errors, { dataVar: "CEM",  separator: '\n'});
                         document.getElementById('scrollContainer').style.textAlign = 'left';
                     } else {
                         console.log("Valid CEM file!");
@@ -2374,8 +2375,15 @@ function readFile() {
                 })
                 .catch(error => {
                     console.log(error.errors);
-                    document.getElementById('fileContent').textContent =
-                        ajv.errorsText(error.errors, { dataVar: "data", schemaVar: "schema", separator: '\n' });
+                    var errorsReport = "<span style='color:#48466d'>=====================================================================</span>\n";
+                    for (const ert of error.errors) {
+                        errorsReport += "\n<span style='color:#4169E1'>Instance Path:</span> " + ert.instancePath + "\n";
+                        errorsReport += "<span style='color:#4169E1'>Message:</span> " + ert.message + "\n";
+                        errorsReport += "<span style='color:#4169E1'>Allowed Value:</span> " + ert.params.allowedValue + "\n";
+                        errorsReport += "<span style='color:#4169E1'>Schema Path:</span> " + ert.schemaPath + '\n';
+                        errorsReport += "\n<span style='color:#48466d'>=====================================================================</span>\n"
+                    }
+                    document.getElementById('fileContent').innerHTML = errorsReport;
                     document.getElementById('scrollContainer').style.textAlign = 'left';
                 });
         } catch (error) {
