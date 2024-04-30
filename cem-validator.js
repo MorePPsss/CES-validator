@@ -117,7 +117,6 @@ eye_shared_schema = {
       "minItems": 1
     },
     "ommatidialProperties": {
-      //!! 原来是descrtiption
       "description": "An JSON key-value object that acts as a named list of the id(s) of the property set(s) to use to describe this eye's per-ommatidial data (in the Local Ommatidial Coordinate Space, defined relative to this eye's origin. The properties describe this eye's per-ommatidial data (such as position, orientation, facet diameter etc., depending on the type of eye data defined).",
       //More complex schema that actually layout which properties of each eye data type are defined in their individual schema files - this schema just specifies that they are of the eyeProperty type
       "type": "object"
@@ -140,7 +139,6 @@ eye_point_ommatidial_schema = {
       "ommatidialProperties": {
         "description": "Point-ommatidial eyes require these ommatidial properties to be defined.",
         "type": "object",
-        // 这四项需是object才可被required
         "properties": {
           "POSITION": {
             "description":"3D Vector",
@@ -283,7 +281,6 @@ eye_surface_schema = {
           "INDICES": {
             "description": "A reference to a glTF accessor that stores the indices of the 3D eye surface triangles, interpreted as triplets of indices to indicate the vertex/normal pair that make up each corner of the triangles, in counter-clockwise winding order.",
             "type": "integer",
-            //!!原来是multple
             "multipleOf": 3,
             "minimum": 0
           }
@@ -317,7 +314,6 @@ eye_surface_schema = {
         ]
       }
     },
-    // TODO 核实是否真的require ommatidialCount
     "required": ["ommatidialCount", "surface"]
 },
 
@@ -481,7 +477,7 @@ ommatidialProperty_accessor_schema = {
     },
     "value": {
       "description": "The id of the accessor or texture storing the eye properties.",
-      "anyOf": [ { "$ref": "glTFid.schema.json" } ]
+      "anyOf": [ { "$ref": "glTFid.schema.json" } ]     
     },
     "dataStride": {
       "description": "It may be necessary to use custom data that does not fit the glTF types of SCALAR, VEC2/3/4 or MAT2/3/4, for instance, when a time-series is required or polygons defined by an arbitrarily long list of VEC2s. This allows that data to be specified alongside regular eye properties.",
@@ -563,7 +559,6 @@ ommatidialProperty_texture_schema = {
     },
     "textureScale": {
       "description": "A scaling factor to apply to the retrieved texture values. 1-4 dimensional. Recommended 1 dimensional. Must be either 1 dimensional (applied to all dimensions of returned texture values) or match the dimensionality of the texture referenced by this ommatidialProperty (i.e. an RGB image can have a texture scale that is a singular number or a 3D vector of 3 numbers).",
-      // 没必要 "anyOf" in "type"
       "anyOf": [
           { "type": "number" },
           { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 4 }
@@ -571,7 +566,6 @@ ommatidialProperty_texture_schema = {
     },
     "textureCenter": {
       "description": "An offset value that is subtracted from all retrieved texture values before being scaled by the textureScale value. Must be either 1 dimensional (applied to all dimensions of returned texture values) or match the dimensionality of the texture referenced by this ommatidialProperty (i.e. an RGB image can have a texture scale that is a singular number or a 3D vector of 3 numbers).",
-      // 这里一样
       "anyOf": [
           { "type": "number" },
           { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
@@ -665,7 +659,14 @@ node_schema=
             }
         },
         "name": { },
-        "extensions": { },
+        "extensions": {
+            "type": "object",
+            "properties": {
+                "OCES_eyes":{
+                    "$ref": "node.OCES_eyes.schema.json"
+                }
+            }
+         },
         "extras": { }
     },
     "dependencies": {
@@ -682,9 +683,7 @@ node_schema=
 },
 
 node_OCES_eyes_schema = {
-    //!! 这个schema是用在node下extensions中的OCES_eyes模块的
-    //!! enabled属性并没出现啊？
-    //!! 应该有referenced 的 eye 的对应id, 加上
+    // node-extensions-OCES_eyes
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "node.OCES_eyes.schema.json",
   "title": "OCES_eyes glTF Node Extension, allowing the addition of heads and eyes to a glTF model",
@@ -692,31 +691,37 @@ node_OCES_eyes_schema = {
   "type": "object",
   "allOf": [ { "$ref": "glTFProperty.schema.json" } ],
   "oneOf": [
-    //!!需要在properties下
-      {"head": 
-      //!! head不需要glTF id吗？
-          {
-              "description": "Defines where or not this node is a head (in practice, this will always be 'true' if present).",
-              "type": "boolean"
-          }
+      {
+        "properties": {
+            "head": 
+            {
+                "description": "Defines where or not this node is a head (in practice, this will always be 'true' if present).",
+                "type": "boolean"
+            },
+            "enabled": {
+                "description": "Whether the specified head or eye is enabled or not.",
+                "type": "boolean",
+                "default": true
+            }
+        },
+        "required": ["head"]
       },
-      {"eye": 
-          {
-              "description": "An indexed reference to an eye to associate to this node.",
-              "allOf":[{"$ref": "glTFid.schema.json"}]
-          }
+      {
+        "properties": {
+            "eye": 
+            {
+                "description": "An indexed reference to an eye to associate to this node.",
+                "allOf":[{"$ref": "glTFid.schema.json"}]
+            },
+            "enabled": {
+                "description": "Whether the specified head or eye is enabled or not.",
+                "type": "boolean",
+                "default": true
+            }
+        },
+        "required": ["eye"]
       }
-    ],//!oneOf should not be put into properties
-  "properties": {
-    "enabled": {
-      "description": "Whether the specified head or eye is enabled or not.",
-      "type": "boolean",
-      "default": true
-    },
-    //!!
-    "extensions": {},
-    "extras": {}
-  }
+    ]
 },
 
 accessor_schema= 
@@ -2363,9 +2368,17 @@ function readFile() {
             validate(data)
                 .then(valid => {
                     if (!valid) {
-                        console.log(validateAsync.errors);
-                        document.getElementById('fileContent').textContent = 
-                            ajv.errorsText(validateAsync.errors, { dataVar: "CEM",  separator: '\n'});
+                        console.log(error.errors);
+                        // Sort the errors based on the length of their instance paths
+                        const sortedErrors = error.errors.sort((a, b) => b.instancePath.length - a.instancePath.length);
+                        var errorsReport = "<span style='color:#48466d'>=====================================================================</span>\n";
+                        for (const ert of sortedErrors) {
+                            errorsReport += "\n<span style='color:#4169E1'>Instance Path:</span> " + ert.instancePath + "\n";
+                            errorsReport += "<span style='color:#4169E1'>Message:</span> " + ert.message + "\n";
+                            errorsReport += "<span style='color:#4169E1'>Schema Path:</span> " + ert.schemaPath + '\n';
+                            errorsReport += "\n<span style='color:#48466d'>=====================================================================</span>\n"
+                        }
+                        document.getElementById('fileContent').innerHTML = errorsReport;
                         document.getElementById('scrollContainer').style.textAlign = 'left';
                     } else {
                         console.log("Valid CEM file!");
@@ -2375,11 +2388,11 @@ function readFile() {
                 })
                 .catch(error => {
                     console.log(error.errors);
+                    const sortedErrors = error.errors.sort((a, b) => b.instancePath.length - a.instancePath.length);
                     var errorsReport = "<span style='color:#48466d'>=====================================================================</span>\n";
-                    for (const ert of error.errors) {
+                    for (const ert of sortedErrors) {
                         errorsReport += "\n<span style='color:#4169E1'>Instance Path:</span> " + ert.instancePath + "\n";
                         errorsReport += "<span style='color:#4169E1'>Message:</span> " + ert.message + "\n";
-                        errorsReport += "<span style='color:#4169E1'>Allowed Value:</span> " + ert.params.allowedValue + "\n";
                         errorsReport += "<span style='color:#4169E1'>Schema Path:</span> " + ert.schemaPath + '\n';
                         errorsReport += "\n<span style='color:#48466d'>=====================================================================</span>\n"
                     }

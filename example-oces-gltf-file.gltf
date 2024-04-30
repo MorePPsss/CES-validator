@@ -31,7 +31,8 @@
             ],
             "extensions": {
                 "OCES_eyes" : {
-                    "head" : true
+                    "head": true,
+                    "enabled": true
                 }
             },
             "children": [2,3,4]
@@ -232,7 +233,7 @@
                     "ommatidialProperties": {
                         "DIAMETER":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAAtJREFUGFdjYAACAAAFAAGq1chRAAAAAElFTkSuQmCC",
                         "FOCAL_OFFSET": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAAtJREFUGFdjYAACAAAFAAGq1chRAAAAAElFTkSuQmCC",
-                        "DISPLACEMENT": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAAtJREFUGFdjYAACAAAFAAGq1chRAAAAAElFTkSuQmCC",
+                        "DISPLACEMENT": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAAxJREFUGFdj+LpdGgAEbAHI46HWbgAAAABJRU5ErkJggg==",
                         "ABSOLUTE_ORIENTATION": [1,1,1]
                     }
                 },
@@ -243,7 +244,7 @@
                     "radius": 1,
                     "ommatidialProperties":{
                         "OMMATIDIAL_BOUNDS": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAAtJREFUGFdjYAACAAAFAAGq1chRAAAAAElFTkSuQmCC",
-                        "DISPLACEMENT": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAAtJREFUGFdjYAACAAAFAAGq1chRAAAAAElFTkSuQmCC",
+                        "DISPLACEMENT": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAAxJREFUGFdj+LpdGgAEbAHI46HWbgAAAABJRU5ErkJggg==",
                         "ABSOLUTE_ORIENTATION": [1,1,1]
                     }
                 }
