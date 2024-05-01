@@ -2364,6 +2364,7 @@ function readFile() {
         var contents = event.target.result;
         try{
             const data = JSON.parse(contents);
+            var validationStatus = document.getElementById("validationStatus");
             //validate files
             validate(data)
                 .then(valid => {
@@ -2380,10 +2381,12 @@ function readFile() {
                         }
                         document.getElementById('fileContent').innerHTML = errorsReport;
                         document.getElementById('scrollContainer').style.textAlign = 'left';
+                        document.getElementById("validationStatus").innerHTML = '<span class="cross">&#10008; Validation failed</span>';
                     } else {
                         console.log("Valid CEM file!");
                         document.getElementById('fileContent').textContent = "Valid CEM file!";
                         document.getElementById('scrollContainer').style.textAlign = 'center';
+                        document.getElementById("validationStatus").innerHTML = '<span class="tick">&#10004; Validation successful</span>';
                     }
                 })
                 .catch(error => {
@@ -2398,10 +2401,31 @@ function readFile() {
                     }
                     document.getElementById('fileContent').innerHTML = errorsReport;
                     document.getElementById('scrollContainer').style.textAlign = 'left';
+                    document.getElementById("validationStatus").innerHTML = '<span class="cross">&#10008; Validation failed</span>';
                 });
+                // Clear the previous timeout if it exists
+                if (window.validationTimeout) {
+                    clearTimeout(window.validationTimeout);
+                };
+                window.validationTimeout = setTimeout(function() {
+                    fadeOut(validationStatus);
+                }, 1000);
         } catch (error) {
             console.error("Failed parsing JSON", error.errors);
         }
     };
     reader.readAsText(file);
+};
+
+function fadeOut(element) {
+    var opacity = 1;
+    var interval = setInterval(function() {
+        if (opacity <= 0) {
+            clearInterval(interval);
+            element.style.opacity = 0;
+        } else {
+            element.style.opacity = opacity;
+            opacity -= 0.1;
+        }
+    }, 100); // Adjust fading speed here
 };

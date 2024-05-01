@@ -4,85 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CEM Validator</title>
-<style>
-    body {
-        margin: 0;
-        padding: 0;
-        display: flex;
-        justify-content: center; /* 在水平方向上居中对齐 */
-    }
-    .container {
-        margin: 50px auto;
-        width: 80%;
-        text-align: center;
-    }
-    footer {
-        position: fixed;
-        bottom: 0;
-        width: 100%;
-        text-align: center;
-        font-size: 12px;
-        color: #666;
-        margin: 0;
-        padding: 10px 0;
-    }
-    #scrollContainer {
-        height: 280px; 
-        width: 700px;
-        overflow-y: auto; 
-        text-align: center; 
-        border: 2px solid #ccc;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        margin: 0 auto;
-        margin-top: 30px;
-    }
-    #fileContent {
-        margin: 0 auto;
-        max-width: 700px; 
-        word-wrap: break-word; 
-        overflow-x: hidden; 
-        padding: 10px;
-        white-space: pre-wrap;
-    }
-    #explanation {
-        display: none;
-        position: absolute;
-        top: 50px;
-        left: 10px;
-        background-color: #f9f9f9;
-        border: 1px solid #ccc;
-        padding: 10px;
-        width: 330px;
-        z-index: 1;
-        text-align: justify;
-    }
-    #questionIcon {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        font-size: 24px;
-        cursor: pointer;
-        color: #333;
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
-        line-height: 36px;
-        text-align: center;
-        background-color: #f0f0f0;
-        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-    }
-</style>
+<link rel="stylesheet" href="styles.css">
 </head>
     <body>
         <div id="questionIcon" onclick="showExplanation()">?</div>
 
-        <!-- 说明文本框 -->
+        <div class="validation-status" id="validationStatus"></div>
+
         <div id="explanation">
-            <p><b>Hello! Welcome to the CEM Validator.</b> </p>
-            <p>You can use the "Select File" button to choose the CEM (Compound Eye Model) you want to validate. </p>
-            <p>After selecting the corresponding file, press the "Upload" button to begin validation. </p>
-            <p>If the validation is successful, the text box below will display "Valid CEM file!".</p>
-            <p>If validation fails, specific error messages will be displayed to help you identify the issue.</p>
+            <p><b>Hello! Welcome to the CEM Validator.</b> <br><br></p>
+            <p>You can use the "Select File" button to choose the CEM (Compound Eye Model) you want to validate. <br><br></p>
+            <p>After selecting the corresponding file, press the "Upload" button to begin validation. <br><br></p>
+            <p>If the validation is successful, a check will appear on top of the page and the text box below will display "Valid CEM file!".<br><br></p>
+            <p>If validation fails, a cross mark will appear, specific error messages will be displayed to help you identify the issue.</p>
         </div>
         <div class="container">
             <img src="tuoslogo.png" alt="Sheffield Logo" style="max-width: 100%; height: auto;">
@@ -101,14 +35,12 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/8.12.0/ajv2020.bundle.min.js"></script>
         <script src="cem-validator.js"></script>
         <script>
-            // 显示说明文本框
             function showExplanation() {
                 var explanation = document.getElementById("explanation");
                 explanation.style.display = "block";
                 event.stopPropagation();
                 document.addEventListener('click', hideExplanation);
             }
-            // 隐藏说明文本框
             function hideExplanation() {
                 var explanation = document.getElementById("explanation");
                 explanation.style.display = "none";
