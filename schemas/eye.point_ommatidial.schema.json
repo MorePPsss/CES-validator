@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "OCES_eyes.eye.point_ommatidial.schema.json",
+  "title": "OCES_eyes Point-ommatidial eye data properties definition",
+  "description": "This schema defines all properties that are unique to point-ommatidial eye datasets.",
+  "type": "object",
+  "properties": {
+    "type": {
+      "description": "The type of eye. This schema defines the point-ommatidial type.",
+      "const": "POINT_OMMATIDIAL"
+    },
+    "ommatidialProperties": {
+      "description": "Point-ommatidial eyes require these ommatidial properties to be defined.",
+      "required": ["POSITION", "ORIENTATION", "FOCAL_OFFSET", "DIAMETER"]
+    },
+    "$comment": "Point-ommatidial eyes have no unique properties outside of those defined in the base eye schema."
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "glTF.OCES_eyes.schema.json",
+  "title": "OCES_eyes glTF Document Extension",
+  "type": "object",
+  "$comment": "This defines version 0.3.0",
+  "allOf": [ { "$ref": "glTFProperty.schema.json" } ],
+  "properties": {
+    "version": {
+      "description": "The version of the OCES_eyes extension standard this file is built against. Must be in the format major.minor.fix and must match an extant OOCES version.",
+      "type": "string",
+      "pattern": "^[0-9]+.[0-9]+.[0-9]+$"
+    },
+    "generator": {
+      "description": "The name and model number of the tool that generated the OCES-specific (or all) parts of this file.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "The name of the tool that generated the OCES-specific (or all) parts of this file.",
+          "type": "string"
+        },
+        "version": {
+          "description": "The version of the tool that generated the OCES-specific (or all) parts of this file.",
+          "type": "string"
+        }
+      }
+    },
+    "creationDatetime": {
+      "description": "The date and time when the file was created.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "maximumRenderDistance": {
+      "description": "Somewhat implementation-specific: The maximum distance from an eye at which objects are still rendered (in top-level worldspace).",
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "extensions": {},
+    "extensionsUsed": {},
+    "extensionsRequired": {},
+    "extras": {},
+    "mirrorPlanes": {
+      "description": "A list of mirror planes (in an arbitrary coordinate system that is interpreted by an individual eye as matching it's associated head's coordinate system) that are used to mirror eye objects. To be referenced by eye objects via index",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "mirrorPlane.schema.json"
+      },
+      "minItems": 1
+    },
+    "ommatidialProperties": {
+      "description": "A list of ommatidial properties (in the local ommatidial coordinate space) that describe the surface property distribution of a specified feature over an eye",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "ommatidialProperty.schema.json"
+      },
+      "minItems": 1
+    },
+    "eyes": {
+      "description": "A list of eyes objects to be attached to nodes via index reference.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "eye.schema.json"
+      },
+      "minItems": 1
+    }
+  },
+  "required": ["version"]
+}
