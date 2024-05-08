@@ -717,6 +717,12 @@ node_OCES_eyes_schema = {
                 "description": "Whether the specified head or eye is enabled or not.",
                 "type": "boolean",
                 "default": true
+            },
+            "mirrorPlanes":
+            {
+                "description": "The indices of mirror planes",
+                "type": "array",
+                "items": {"$ref": "glTFid.schema.json"}
             }
         },
         "required": ["eye"]
@@ -2208,7 +2214,7 @@ ajv.addFormat('date-time', {
     validate: function(data) {
         // RFC3339 date-time 
         const rfc3339Regex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/;
-        return rfc3339Regex.test(data);
+        return rfc3339Regex.test(data);"$async"
     }
 });
 ajv.addKeyword({
@@ -2358,7 +2364,6 @@ function readFile() {
         return;
     }
 
-    const errTemplate = "{keyword} validation failed on {dataPath}";
     var reader = new FileReader();
     reader.onload = function(event) {
         var contents = event.target.result;

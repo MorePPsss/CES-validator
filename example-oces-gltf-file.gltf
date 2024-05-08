@@ -191,7 +191,7 @@
                     "mirrorPlanes":[0,1],
                     "ommatidialProperties": {
                         "POSITION": [1,1,1],
-                        "ORIENTATION": [1,1],
+                        "ORIENTATION": [1,1,1],
                         "DIAMETER": 1,
                         "FOCAL_OFFSET": -1
                     }
